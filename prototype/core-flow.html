@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI闯关学习 — 核心业务流程原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Warm, readable palette */
+  --primary: #E8864A;
+  --primary-light: #F2A672;
+  --primary-bg: #FFF3EB;
+  --teal: #5B9A8B;
+  --teal-light: #E8F4F0;
+  --blue: #6BA3C7;
+  --blue-light: #EAF3F9;
+  --green: #66A86A;
+  --green-light: #EBF5EC;
+  --green-dark: #4E8F52;
+  --red: #CF6B6B;
+  --red-light: #FCEAEA;
+  --yellow: #E5B94E;
+  --yellow-light: #FDF6E3;
+  --cream: #FAF7F2;
+  --white: #FFFFFF;
+  --paper: #FDFCFA;
+  --text-primary: #3A3532;
+  --text-secondary: #7A7572;
+  --text-hint: #A8A3A0;
+  --border-color: #D5CFC6;
+  --border-light: #E8E3DC;
+  --border: 1.5px solid var(--border-color);
+  --border-thin: 1px solid var(--border-light);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow: 0 2px 8px rgba(58,53,50,0.06);
+  --shadow-md: 0 4px 16px rgba(58,53,50,0.08);
+  --shadow-lg: 0 8px 24px rgba(58,53,50,0.1);
+  --font-title: 'ZCOOL KuaiLe', cursive;
+  --font-body: 'Noto Sans SC', -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: #EFEBE4;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  text-align: center;
+  padding: 48px 20px 24px;
+}
+.page-header h1 {
+  font-family: var(--font-title);
+  font-size: 38px;
+  color: var(--primary);
+  letter-spacing: 3px;
+  display: inline-block;
+}
+.page-header .subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+.page-header .flow-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--teal);
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 13px;
+  padding: 5px 18px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 20px;
+  margin-top: 14px;
+}
+
+/* ===== GRID ===== */
+.prototype-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 40px 60px;
+}
+@media (max-width: 1200px) {
+  .prototype-grid { gap: 28px; padding: 20px; }
+}
+@media (max-width: 768px) {
+  .prototype-grid { grid-template-columns: 1fr; gap: 32px; padding: 16px; }
+  .page-header h1 { font-size: 30px; }
+}
+
+/* ===== PHONE FRAME ===== */
+.phone-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.phone-label {
+  font-family: var(--font-title);
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.phone-label .badge {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+
+.phone-frame {
+  width: 375px;
+  max-width: 100%;
+  height: 750px;
+  background: var(--cream);
+  border: 1.5px solid var(--border-color);
+  border-radius: 40px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 26px;
+  background: var(--text-primary);
+  border-radius: 0 0 18px 18px;
+  z-index: 10;
+}
+
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 24px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.screen {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+.screen::-webkit-scrollbar { width: 0; }
+
+.bottom-nav {
+  height: 56px;
+  background: var(--white);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-shrink: 0;
+}
+.bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--text-hint);
+  font-weight: 500;
+}
+.bottom-nav .nav-item.active { color: var(--primary); }
+.bottom-nav .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-icon-svg { width: 22px; height: 22px; }
+.nav-item.active .nav-icon-svg path { fill: var(--primary); }
+.nav-item .nav-icon-svg path { fill: var(--text-hint); }
+
+/* ===== PAGE 1: HOME ===== */
+.home-screen {
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.home-hero {
+  position: relative;
+  padding: 24px 20px 32px;
+  background: linear-gradient(170deg, #FFF3EB 0%, var(--cream) 100%);
+  text-align: center;
+}
+.home-mascot-svg { margin: 0 auto 8px; }
+.home-title {
+  font-family: var(--font-title);
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.home-subtitle-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.home-content {
+  flex: 1;
+  padding: 0 20px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.input-label {
+  font-family: var(--font-title);
+  font-size: 15px;
+  color: var(--primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.input-field {
+  width: 100%;
+  min-height: 80px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-hint);
+  background: var(--paper);
+  line-height: 1.6;
+}
+.input-hint {
+  font-size: 12px;
+  color: var(--text-hint);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.quick-tag {
+  background: var(--yellow-light);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quick-tag:hover { background: #F8EDD0; border-color: var(--yellow); }
+
+.start-btn {
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 20px;
+  letter-spacing: 3px;
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 14px rgba(232,134,74,0.3);
+  padding: 14px;
+  cursor: pointer;
+  text-align: center;
+  margin-top: auto;
+  position: relative;
+  transition: all 0.2s;
+}
+.start-btn:hover { box-shadow: 0 6px 20px rgba(232,134,74,0.4); transform: translateY(-1px); }
+
+.demo-btn {
+  background: var(--white);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-top: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.home-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+}
+.home-stat {
+  flex: 1;
+  text-align: center;
+}
+.home-stat-val {
+  font-family: var(--font-title);
+  font-size: 18px;
+  color: var(--text-primary);
+}
+.home-stat-lbl {
+  font-size: 10px;
+  color: var(--text-hint);
+  margin-top: 2px;
+}
+
+/* ===== PAGE 2: LOADING ===== */
+.loading-screen {
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 30px;
+  text-align: center;
+}
+.loading-mascot-svg { margin-bottom: 16px; }
+.loading-title {
+  font-family: var(--font-title);
+  font-size: 20px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.loading-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.loading-bar-wrap {
+  width: 100%;
+  max-width: 260px;
+  height: 20px;
+  background: var(--white);
+  border: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+.loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--teal), var(--green));
+  border-radius: 8px;
+  animation: loadProgress 3s ease-in-out forwards;
+}
+
+.loading-tips {
+  margin-top: 28px;
+  padding: 14px 16px;
+  background: var(--blue-light);
+  border: 1px solid #C8DDEA;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: #4A7D9B;
+  max-width: 280px;
+  line-height: 1.6;
+  text-align: left;
+}
+.loading-tips strong { color: #3A6A85; }
+
+.loading-dots {
+  display: inline-flex;
+  gap: 5px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--teal);
+  border-radius: 50%;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+.floating-bubbles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.float-bubble {
+  position: absolute;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  animation: floatUp 5s ease-in-out infinite;
+  box-shadow: var(--shadow);
+}
+.float-bubble:nth-child(1) { left: 8%; bottom: 12%; color: var(--blue); }
+.float-bubble:nth-child(2) { right: 10%; bottom: 28%; animation-delay: 1.8s; color: var(--primary); }
+.float-bubble:nth-child(3) { left: 15%; bottom: 44%; animation-delay: 3.5s; color: var(--teal); }
+
+/* ===== PAGE 3: QUIZ ===== */
+.quiz-screen {
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.quiz-header {
+  background: var(--white);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.quiz-back { font-size: 14px; color: var(--text-secondary); cursor: pointer; }
+.quiz-topic {
+  font-family: var(--font-title);
+  font-size: 16px;
+  color: var(--text-primary);
+  flex: 1;
+  text-align: center;
+}
+.quiz-progress-num {
+  font-family: var(--font-title);
+  font-size: 14px;
+  color: var(--primary);
+}
+
+.xp-bar-section {
+  padding: 12px 16px 8px;
+  flex-shrink: 0;
+}
+.xp-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.xp-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.xp-value { font-size: 12px; color: var(--text-secondary); }
+.xp-bar-track {
+  height: 10px;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--yellow), var(--primary));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.quiz-content {
+  flex: 1;
+  padding: 10px 16px 16px;
+  overflow-y: auto;
+}
+
+.question-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin-bottom: 12px;
+}
+.question-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.question-num {
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 13px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.question-type {
+  background: var(--teal-light);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+.question-diff { margin-left: auto; font-size: 13px; letter-spacing: 1px; }
+.question-stem {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.option-item:hover { background: var(--primary-bg); border-color: var(--primary-light); }
+.option-item.selected { background: var(--blue-light); border-color: var(--blue); }
+.option-item.correct { background: var(--green-light); border-color: var(--green); }
+.option-item.wrong { background: var(--red-light); border-color: var(--red); }
+.option-key {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.option-item.selected .option-key { border-color: var(--blue); color: var(--blue); }
+.option-item.correct .option-key { border-color: var(--green); color: var(--green-dark); background: #D4EDD5; }
+.option-item.wrong .option-key { border-color: var(--red); color: var(--red); background: #F9DADA; }
+.option-text { font-size: 14px; line-height: 1.5; color: var(--text-primary); }
+
+.feedback-section { margin-top: 14px; }
+.feedback-bubble {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.feedback-bubble.correct-fb {
+  background: var(--green-light);
+  border: 1px solid #B8DABA;
+}
+.feedback-bubble.wrong-fb {
+  background: var(--red-light);
+  border: 1px solid #EBC5C5;
+}
+.feedback-header {
+  font-family: var(--font-title);
+  font-size: 15px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-header.correct-h { color: var(--green-dark); }
+.feedback-header.wrong-h { color: var(--red); }
+.feedback-bubble p { color: var(--text-primary); }
+
+.knowledge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--yellow-light);
+  border: 1px solid #E0D4A8;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #8B7A3D;
+  margin-top: 10px;
+}
+
+.quiz-action {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-light);
+  flex-shrink: 0;
+  background: var(--white);
+}
+.next-btn {
+  width: 100%;
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 16px;
+  letter-spacing: 2px;
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 3px 10px rgba(232,134,74,0.25);
+  padding: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* ===== PAGE 4: REPORT ===== */
+.report-screen {
+  background: linear-gradient(180deg, var(--primary-bg) 0%, var(--cream) 40%);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.report-top {
+  text-align: center;
+  padding: 20px 20px 28px;
+}
+.report-trophy-svg { margin: 0 auto 8px; }
+.report-title {
+  font-family: var(--font-title);
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.report-topic-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.stats-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+}
+.stat-card {
+  flex: 1;
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 14px 8px;
+  text-align: center;
+}
+.stat-icon-svg { margin: 0 auto 4px; }
+.stat-value {
+  font-family: var(--font-title);
+  font-size: 22px;
+  color: var(--primary);
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-hint);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.report-body {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+.report-section {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.report-section-title {
+  font-family: var(--font-title);
+  font-size: 15px;
+  color: var(--teal);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.report-section p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.weak-point {
+  display: inline-block;
+  background: var(--red-light);
+  border: 1px solid #E8C5C5;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--red);
+  margin: 3px 4px 3px 0;
+}
+.mastered-point {
+  display: inline-block;
+  background: var(--green-light);
+  border: 1px solid #B8DABA;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green-dark);
+  margin: 3px 4px 3px 0;
+}
+
+.quote-card {
+  background: var(--yellow-light);
+  border: 1px solid #E5D9B0;
+  border-radius: var(--radius);
+  padding: 18px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.quote-text {
+  font-family: var(--font-title);
+  font-size: 17px;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+.quote-text::before { content: '「'; color: var(--primary); }
+.quote-text::after { content: '」'; color: var(--primary); }
+
+.poster-preview {
+  background: linear-gradient(135deg, var(--primary) 0%, #D4714A 100%);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  color: #fff;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.poster-preview::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1.5px dashed rgba(255,255,255,0.35);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.share-btns { display: flex; gap: 10px; }
+.share-btn {
+  flex: 1;
+  padding: 12px;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.share-btn.primary { background: var(--green); color: #fff; border-color: var(--green); }
+.share-btn.secondary { background: var(--white); color: var(--text-primary); }
+
+/* ===== FLOW CONNECTOR ===== */
+.flow-connector { display: none; }
+@media (min-width: 769px) {
+  .flow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-column: 1 / -1;
+    padding: 0;
+    margin: -16px 0;
+  }
+  .flow-connector .arrow-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-title);
+    font-size: 14px;
+    color: var(--text-hint);
+  }
+  .flow-connector .arrow-line::before,
+  .flow-connector .arrow-line::after {
+    content: '';
+    width: 60px;
+    height: 1.5px;
+    background: repeating-linear-gradient(90deg, var(--border-color) 0, var(--border-color) 6px, transparent 6px, transparent 12px);
+  }
+}
+
+.scroll-hint {
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  color: var(--text-hint);
+  letter-spacing: 1px;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes loadProgress {
+  0% { width: 0%; }
+  30% { width: 35%; }
+  60% { width: 65%; }
+  85% { width: 85%; }
+  100% { width: 95%; }
+}
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(-70px); opacity: 0; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.phone-wrapper:nth-child(1) { animation: fadeInUp 0.5s ease-out both 0.05s; }
+.phone-wrapper:nth-child(2) { animation: fadeInUp 0.5s ease-out both 0.15s; }
+.phone-wrapper:nth-child(3) { animation: fadeInUp 0.5s ease-out both 0.25s; }
+.phone-wrapper:nth-child(4) { animation: fadeInUp 0.5s ease-out both 0.35s; }
+.phone-wrapper:nth-child(6) { animation: fadeInUp 0.5s ease-out both 0.45s; }
+.phone-wrapper:nth-child(7) { animation: fadeInUp 0.5s ease-out both 0.55s; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>AI闯关学习</h1>
+  <div class="subtitle">小程序UI原型 · 漫画风格</div>
+  <div class="flow-label">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    核心业务流程
+  </div>
+</div>
+
+<div class="prototype-grid">
+
+  <!-- ====== PAGE 1: HOME ====== -->
+  <div class="phone-wrapper">
+    <div class="phone-label">
+      ① 首页 · 知识输入
+      <span class="badge">入口</span>
+    </div>
+    <div class="phone-frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>4G · 100%</span>
+      </div>
+      <div class="screen home-screen">
+        <div class="home-hero">
+          <!-- SVG Mascot: Cute owl student -->
+          <div class="home-mascot-svg">
+            <svg width="100" height="90" viewBox="0 0 100 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- graduation hat -->
+              <polygon points="50,8 20,24 50,18 80,24" fill="#3A3532"/>
+              <rect x="40" y="18" width="20" height="6" rx="1" fill="#3A3532"/>
+              <line x1="75" y1="24" x2="82" y2="32" stroke="#E8864A" stroke-width="2"/>
+              <circle cx="82" cy="34" r="3" fill="#E8864A"/>
+              <!-- owl body -->
+              <ellipse cx="50" cy="55" rx="30" ry="28" fill="#F2E8D8"/>
+              <ellipse cx="50" cy="55" rx="30" ry="28" stroke="#3A3532" stroke-width="1.5" fill="none"/>
+              <!-- belly -->
+              <ellipse cx="50" cy="62" rx="18" ry="16" fill="#FFF8F0"/>
+              <ellipse cx="50" cy="62" rx="18" ry="16" stroke="#D5CFC6" stroke-width="1" fill="none"/>
+              <!-- eyes -->
+              <circle cx="38" cy="48" r="11" fill="#FFF" stroke="#3A3532" stroke-width="1.5"/>
+              <circle cx="62" cy="48" r="11" fill="#FFF" stroke="#3A3532" stroke-width="1.5"/>
+              <circle cx="40" cy="47" r="5" fill="#3A3532"/>
+              <circle cx="64" cy="47" r="5" fill="#3A3532"/>
+              <circle cx="41.5" cy="45.5" r="2" fill="#FFF"/>
+              <circle cx="65.5" cy="45.5" r="2" fill="#FFF"/>
+              <!-- beak -->
+              <polygon points="50,54 46,58 54,58" fill="#E8864A"/>
+              <!-- blush -->
+              <ellipse cx="30" cy="56" rx="5" ry="3" fill="#F2C4B0" opacity="0.6"/>
+              <ellipse cx="70" cy="56" rx="5" ry="3" fill="#F2C4B0" opacity="0.6"/>
+              <!-- tiny books -->
+              <rect x="36" y="70" width="12" height="9" rx="1" fill="#6BA3C7" stroke="#3A3532" stroke-width="1"/>
+              <line x1="42" y1="70" x2="42" y2="79" stroke="#3A3532" stroke-width="0.8"/>
+              <rect x="52" y="70" width="12" height="9" rx="1" fill="#E8864A" stroke="#3A3532" stroke-width="1"/>
+              <line x1="58" y1="70" x2="58" y2="79" stroke="#3A3532" stroke-width="0.8"/>
+              <!-- wings -->
+              <path d="M22,50 Q15,55 20,65" stroke="#3A3532" stroke-width="1.5" fill="none"/>
+              <path d="M78,50 Q85,55 80,65" stroke="#3A3532" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+          <div class="home-title">今天想学点啥？</div>
+          <div class="home-subtitle-text">支持输入一句话、一段说明。MVP 首屏只保留一个<br>核心输入框，减少干扰成本。</div>
+        </div>
+        <div class="home-content">
+          <div class="input-card">
+            <div class="input-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              AI 小教练：
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6">"把你想学的内容丢给我，<br>我会把它变成一套能闯关的题目。"</div>
+            <div class="input-field">我想快速搞懂什么是 RAG，它和传统有什么区别？最好能通过几个问题让我记住核心概念。</div>
+          </div>
+          <div class="quick-tags">
+            <span class="quick-tag"># Java 入门</span>
+            <span class="quick-tag"># 产品经理</span>
+            <span class="quick-tag"># AI 基础</span>
+            <span class="quick-tag"># 面试知识点</span>
+          </div>
+          <div class="start-btn">开始生成闯关题</div>
+          <div class="demo-btn">试试一个示例主题</div>
+          <div class="home-stats">
+            <div class="home-stat"><div class="home-stat-val">3–5</div><div class="home-stat-lbl">默认题量</div></div>
+            <div class="home-stat"><div class="home-stat-val">3种</div><div class="home-stat-lbl">题型组合</div></div>
+            <div class="home-stat"><div class="home-stat-val">1次</div><div class="home-stat-lbl">通关复盘</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" fill="currentColor"/></svg>
+          首页
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" fill="currentColor"/></svg>
+          历史
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" fill="currentColor"/></svg>
+          我的
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PAGE 2: LOADING ====== -->
+  <div class="phone-wrapper">
+    <div class="phone-label">
+      ② 加载中 · AI出题
+      <span class="badge" style="background:var(--teal)">等待</span>
+    </div>
+    <div class="phone-frame">
+      <div class="status-bar"><span>9:41</span><span>4G · 100%</span></div>
+      <div class="screen loading-screen">
+        <div class="floating-bubbles">
+          <div class="float-bubble">搜索中...</div>
+          <div class="float-bubble">生成题目</div>
+          <div class="float-bubble">知识整理</div>
+        </div>
+        <!-- SVG: Robot thinking -->
+        <div class="loading-mascot-svg">
+          <svg width="120" height="110" viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- antenna -->
+            <line x1="60" y1="22" x2="60" y2="8" stroke="#D5CFC6" stroke-width="2"/>
+            <circle cx="60" cy="6" r="4" fill="#E8864A" stroke="#3A3532" stroke-width="1"/>
+            <!-- thought bubble -->
+            <circle cx="88" cy="16" r="3" fill="#EAF3F9" stroke="#C8DDEA" stroke-width="1"/>
+            <circle cx="94" cy="10" r="5" fill="#EAF3F9" stroke="#C8DDEA" stroke-width="1"/>
+            <rect x="85" y="0" width="34" height="16" rx="8" fill="#EAF3F9" stroke="#C8DDEA" stroke-width="1"/>
+            <text x="102" y="11" font-size="7" fill="#6BA3C7" text-anchor="middle" font-weight="600">AI</text>
+            <!-- head -->
+            <rect x="30" y="22" width="60" height="44" rx="14" fill="#FFF" stroke="#3A3532" stroke-width="1.5"/>
+            <!-- face screen -->
+            <rect x="38" y="30" width="44" height="26" rx="6" fill="#EAF3F9"/>
+            <!-- eyes -->
+            <circle cx="50" cy="42" r="4" fill="#3A3532"/>
+            <circle cx="70" cy="42" r="4" fill="#3A3532"/>
+            <circle cx="51.5" cy="40.5" r="1.5" fill="#FFF"/>
+            <circle cx="71.5" cy="40.5" r="1.5" fill="#FFF"/>
+            <!-- mouth -->
+            <path d="M54,50 Q60,55 66,50" stroke="#3A3532" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <!-- body -->
+            <rect x="38" y="68" width="44" height="28" rx="8" fill="#F2E8D8" stroke="#3A3532" stroke-width="1.5"/>
+            <!-- chest light -->
+            <circle cx="60" cy="80" r="6" fill="#E8864A" opacity="0.8"/>
+            <circle cx="60" cy="80" r="3" fill="#FFF" opacity="0.6"/>
+            <!-- arms -->
+            <rect x="18" y="72" width="18" height="8" rx="4" fill="#F2E8D8" stroke="#3A3532" stroke-width="1.5"/>
+            <rect x="84" y="72" width="18" height="8" rx="4" fill="#F2E8D8" stroke="#3A3532" stroke-width="1.5"/>
+            <!-- feet -->
+            <rect x="42" y="96" width="14" height="8" rx="4" fill="#D5CFC6" stroke="#3A3532" stroke-width="1"/>
+            <rect x="64" y="96" width="14" height="8" rx="4" fill="#D5CFC6" stroke="#3A3532" stroke-width="1"/>
+            <!-- scanning line -->
+            <line x1="40" y1="36" x2="80" y2="36" stroke="#6BA3C7" stroke-width="0.7" opacity="0.5">
+              <animate attributeName="y1" values="32;54;32" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="y2" values="32;54;32" dur="2s" repeatCount="indefinite"/>
+            </line>
+          </svg>
+        </div>
+        <div class="loading-title">
+          AI正在联网学习中
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="loading-subtitle">
+          正在搜索「RAG 入门基础知识」<br>
+          并生成精彩闯关题目
+        </div>
+        <div class="loading-bar-wrap">
+          <div class="loading-bar-fill"></div>
+        </div>
+        <div class="loading-tips">
+          <strong>你知道吗？</strong><br>
+          RAG（检索增强生成）让AI先从知识库找资料，再组织回答，大大减少了"幻觉"问题！
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PAGE 3: QUIZ (作答中) ====== -->
+  <div class="phone-wrapper">
+    <div class="phone-label">
+      ③ 闯关答题 · 作答中
+      <span class="badge">核心</span>
+    </div>
+    <div class="phone-frame">
+      <div class="status-bar"><span>9:42</span><span>5/5题 · XP 180</span></div>
+      <div class="screen quiz-screen">
+        <div class="quiz-header">
+          <span class="quiz-back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </span>
+          <span class="quiz-topic">RAG 入门闯关</span>
+          <span class="quiz-progress-num">2/5</span>
+        </div>
+        <div class="xp-bar-section">
+          <div class="xp-bar-header">
+            <span class="xp-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+              经验值
+            </span>
+            <span class="xp-value">40 / 100 XP</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" style="width: 40%"></div>
+          </div>
+        </div>
+        <div class="quiz-content">
+          <div class="question-card">
+            <div class="question-meta">
+              <span class="question-num">2</span>
+              <span class="question-type">多选题</span>
+              <span class="question-diff">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--yellow)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--yellow)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+              </span>
+            </div>
+            <div class="question-stem">RAG 相比传统只靠大模型直接回答，最核心的优势是什么？</div>
+            <div style="font-size:12px;color:var(--text-hint);margin-bottom:14px;">请选择所有正确答案。多选题用勾选圆点，单选题则改成单选态。</div>
+            <div class="options-list">
+              <div class="option-item correct">
+                <span class="option-key" style="border-color:var(--green);color:var(--green-dark)">A</span>
+                <span class="option-text">能引入外部知识，降低模型"幻觉"的概率</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--green)" style="margin-left:auto;flex-shrink:0"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+              </div>
+              <div class="option-item wrong">
+                <span class="option-key" style="border-color:var(--red);color:var(--red)">B</span>
+                <span class="option-text">能保证所有答案都 100% 正确，不再需要校验</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--red)" style="margin-left:auto;flex-shrink:0"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </div>
+              <div class="option-item correct">
+                <span class="option-key" style="border-color:var(--green);color:var(--green-dark)">C</span>
+                <span class="option-text">能让回答更贴近最新资料或特定私有数据</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--green)" style="margin-left:auto;flex-shrink:0"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+              </div>
+              <div class="option-item">
+                <span class="option-key">D</span>
+                <span class="option-text">本质上只是把模型参数翻倍，所以更强</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="quiz-action">
+          <div class="next-btn">确认答案</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PAGE 3B: QUIZ (答对反馈) ====== -->
+  <div class="phone-wrapper">
+    <div class="phone-label">
+      ③ 闯关答题 · 答对反馈
+      <span class="badge" style="background:var(--green)">正确</span>
+    </div>
+    <div class="phone-frame">
+      <div class="status-bar"><span>9:42</span><span>5/5题 · XP 200</span></div>
+      <div class="screen quiz-screen">
+        <div class="quiz-header">
+          <span class="quiz-back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </span>
+          <span class="quiz-topic">RAG 入门闯关</span>
+          <span class="quiz-progress-num">2/5</span>
+        </div>
+        <div class="xp-bar-section">
+          <div class="xp-bar-header">
+            <span class="xp-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+              经验值
+            </span>
+            <span class="xp-value">55 / 100 XP</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" style="width: 55%"></div>
+          </div>
+        </div>
+        <div class="quiz-content">
+          <div class="question-card">
+            <div class="question-meta">
+              <span class="question-num">2</span>
+              <span class="question-type">多选题</span>
+              <span class="question-diff">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--yellow)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--yellow)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+              </span>
+            </div>
+            <div class="question-stem">RAG 相比传统只靠大模型直接回答，最核心的优势是什么？</div>
+            <div class="options-list">
+              <div class="option-item correct">
+                <span class="option-key">A ✓</span>
+                <span class="option-text">能引入外部知识，降低模型"幻觉"的概率</span>
+              </div>
+              <div class="option-item">
+                <span class="option-key">B</span>
+                <span class="option-text">能保证所有答案都 100% 正确</span>
+              </div>
+              <div class="option-item correct">
+                <span class="option-key">C ✓</span>
+                <span class="option-text">能让回答更贴近最新资料或特定私有数据</span>
+              </div>
+              <div class="option-item">
+                <span class="option-key">D</span>
+                <span class="option-text">本质上只是把模型参数翻倍</span>
+              </div>
+            </div>
+            <div class="feedback-section">
+              <div class="feedback-bubble correct-fb">
+                <div class="feedback-header correct-h">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--green-dark)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                  太棒了！回答正确！ +15 XP
+                </div>
+                <p>RAG 的核心价值在于<strong>检索增强</strong>——先从外部知识库检索相关文档，然后将检索结果与用户问题一起送给大模型。这样模型的回答有了"参考资料"，既减少了幻觉，又能获取最新信息。</p>
+                <span class="knowledge-tag">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#8B7A3D"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+                  知识点：检索增强生成
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="quiz-action">
+          <div class="next-btn">下一题 →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-connector">
+    <div class="arrow-line">全部答完 → 生成报告</div>
+  </div>
+
+  <!-- ====== PAGE 3C: QUIZ (答错反馈) ====== -->
+  <div class="phone-wrapper">
+    <div class="phone-label">
+      ③ 闯关答题 · 答错反馈
+      <span class="badge" style="background:var(--red)">答错</span>
+    </div>
+    <div class="phone-frame">
+      <div class="status-bar"><span>9:43</span><span>5/5题 · XP 200</span></div>
+      <div class="screen quiz-screen">
+        <div class="quiz-header">
+          <span class="quiz-back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </span>
+          <span class="quiz-topic">RAG 入门闯关</span>
+          <span class="quiz-progress-num">3/5</span>
+        </div>
+        <div class="xp-bar-section">
+          <div class="xp-bar-header">
+            <span class="xp-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+              经验值
+            </span>
+            <span class="xp-value">55 / 100 XP</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" style="width: 55%"></div>
+          </div>
+        </div>
+        <div class="quiz-content">
+          <div class="question-card">
+            <div class="question-meta">
+              <span class="question-num">3</span>
+              <span class="question-type">判断题</span>
+              <span class="question-diff">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--yellow)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>
+              </span>
+            </div>
+            <div class="question-stem">RAG 的"可靠性边界"是由 Embedding 模型的质量决定的，与检索策略无关。</div>
+            <div class="options-list">
+              <div class="option-item wrong">
+                <span class="option-key">A ✗</span>
+                <span class="option-text">正确</span>
+              </div>
+              <div class="option-item correct">
+                <span class="option-key">B ✓</span>
+                <span class="option-text">错误</span>
+              </div>
+            </div>
+            <div class="feedback-section">
+              <div class="feedback-bubble wrong-fb">
+                <div class="feedback-header wrong-h">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  哎呀~ 答错了！ +0 XP
+                </div>
+                <p>RAG 的可靠性边界不仅取决于 Embedding 模型质量，还受<strong>检索策略</strong>（如切片策略、检索算法、重排模型）、<strong>Prompt 构造方式</strong>以及<strong>生成模型的推理能力</strong>共同影响。单独优化任何一个环节都不够。</p>
+                <span class="knowledge-tag">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#8B7A3D"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+                  知识点：RAG 可靠性边界
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="quiz-action">
+          <div class="next-btn">下一题 →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PAGE 4: REPORT ====== -->
+  <div class="phone-wrapper">
+    <div class="phone-label">
+      ④ 复盘报告
+      <span class="badge" style="background:var(--green)">通关</span>
+    </div>
+    <div class="phone-frame">
+      <div class="status-bar"><span>9:46</span><span>通关成功</span></div>
+      <div class="screen report-screen">
+        <div class="report-top">
+          <!-- SVG Trophy -->
+          <div class="report-trophy-svg">
+            <svg width="80" height="75" viewBox="0 0 80 75" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M28,10 h24 v30 q0,12 -12,16 q-12,-4 -12,-16 z" fill="#E5B94E" stroke="#3A3532" stroke-width="1.5"/>
+              <path d="M28,10 h24 v6 h-24 z" fill="#F2D070"/>
+              <rect x="36" y="55" width="8" height="8" fill="#D5CFC6" stroke="#3A3532" stroke-width="1"/>
+              <rect x="30" y="62" width="20" height="5" rx="2" fill="#D5CFC6" stroke="#3A3532" stroke-width="1"/>
+              <!-- handles -->
+              <path d="M28,16 Q14,16 14,28 Q14,36 24,36" stroke="#3A3532" stroke-width="1.5" fill="none"/>
+              <path d="M52,16 Q66,16 66,28 Q66,36 56,36" stroke="#3A3532" stroke-width="1.5" fill="none"/>
+              <!-- star -->
+              <polygon points="40,22 42,28 48,28 43,32 45,38 40,34 35,38 37,32 32,28 38,28" fill="#FFF" opacity="0.5"/>
+              <!-- sparkles -->
+              <circle cx="18" cy="8" r="2" fill="#E5B94E" opacity="0.6"/>
+              <circle cx="62" cy="6" r="1.5" fill="#E8864A" opacity="0.6"/>
+              <circle cx="70" cy="18" r="1" fill="#E5B94E" opacity="0.8"/>
+            </svg>
+          </div>
+          <div class="report-title">你已通关这组知识</div>
+          <div class="report-topic-name">「RAG 入门基础」闯关报告</div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon-svg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--primary)" stroke-width="1.5"/><circle cx="12" cy="12" r="6" stroke="var(--primary)" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="var(--primary)"/></svg></div>
+            <div class="stat-value">76%</div>
+            <div class="stat-label">正确率</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-svg"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--yellow)"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg></div>
+            <div class="stat-value">65</div>
+            <div class="stat-label">经验值</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-svg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#FDF6E3" stroke="#E5B94E" stroke-width="1.5"/><text x="12" y="16" font-size="10" fill="#8B7A3D" text-anchor="middle" font-weight="700">$</text></svg></div>
+            <div class="stat-value">8</div>
+            <div class="stat-label">金币</div>
+          </div>
+        </div>
+        <div class="report-body">
+          <div class="report-section" style="text-align:center;">
+            <div class="report-section-title" style="justify-content:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              RAG 入门掌握度
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:20px;">
+              <svg width="90" height="90" viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="38" fill="none" stroke="var(--border-light)" stroke-width="6"/>
+                <circle cx="45" cy="45" r="38" fill="none" stroke="var(--teal)" stroke-width="6" stroke-dasharray="180 60" stroke-dashoffset="60" stroke-linecap="round" transform="rotate(-90 45 45)"/>
+                <text x="45" y="42" text-anchor="middle" font-family="var(--font-title)" font-size="20" fill="var(--text-primary)">76%</text>
+                <text x="45" y="55" text-anchor="middle" font-size="9" fill="var(--text-hint)">掌握度</text>
+              </svg>
+              <div style="text-align:left;font-size:12px;color:var(--text-secondary);line-height:1.8;">
+                答对 4 / 5 题，检索增强的定义已经掌握，但对"可靠性边界"还需要再巩固。
+              </div>
+            </div>
+          </div>
+          <div class="report-section">
+            <div class="report-section-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              三句知识总结
+            </div>
+            <ul style="list-style:none;padding:0;">
+              <li style="font-size:13px;line-height:1.8;color:var(--text-secondary);padding:3px 0;">• RAG = 检索 + 生成，先找资料再组织回答。</li>
+              <li style="font-size:13px;line-height:1.8;color:var(--text-secondary);padding:3px 0;">• 它提升的是"依据感"和"时效性"，不是绝对正确率。</li>
+              <li style="font-size:13px;line-height:1.8;color:var(--text-secondary);padding:3px 0;">• 真正的难点在于检索质量、切片策略和答案校验。</li>
+            </ul>
+          </div>
+          <div class="report-section">
+            <div class="report-section-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              掌握点 / 薄弱点
+            </div>
+            <div>
+              <span class="mastered-point">已掌握：RAG 定义</span>
+              <span class="mastered-point">已掌握：应用场景</span>
+            </div>
+            <div style="margin-top:6px;">
+              <span class="weak-point">待加强：可靠性边界</span>
+            </div>
+          </div>
+          <div class="quote-card">
+            <div class="quote-text">学得越多，世界越有趣</div>
+          </div>
+          <div class="share-btns">
+            <div class="share-btn primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+              分享海报
+            </div>
+            <div class="share-btn secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              保存图片
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="scroll-hint">— 核心业务流程原型 · 完 —</div>
+
+</body>
+</html>
